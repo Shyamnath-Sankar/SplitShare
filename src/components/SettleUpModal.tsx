@@ -1,0 +1,187 @@
+// ... imports ...
+import React, { useState } from 'react';
+import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
+import { X, ArrowRightLeft, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { getCurrencySymbol } from '../utils/currency';
+
+export default function SettleUpModal({ onClose }: { onClose: () => void }) {
+  const { addExpense, friendships, users } = useData();
+  const { currentUser, userProfile } = useAuth();
+  
+  const [amount, setAmount] = useState('');
+  const [selectedFriend, setSelectedFriend] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!currentUser) return null;
+
+  const friendsIds = friendships.map(f => f.users.find(u => u !== currentUser.uid)).filter(Boolean) as string[];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || !selectedFriend || isSubmitting) return;
+
+    const totalAmount = parseFloat(amount);
+    if (isNaN(totalAmount) || totalAmount <= 0) return;
+
+    setIsSubmitting(true);
+    try {
+      const splits: Record<string, { paid: number; owed: number }> = {
+        [currentUser.uid]: { paid: totalAmount, owed: 0 },
+        [selectedFriend]: { paid: 0, owed: totalAmount }
+      };
+
+      await addExpense({
+        description: 'Payment',
+        amount: totalAmount,
+        date: new Date(),
+        creatorId: currentUser.uid,
+        payerId: currentUser.uid,
+        participants: [currentUser.uid, selectedFriend],
+        splits,
+        type: 'settlement'
+      });
+
+      onClose();
+    } catch (error) {
+      console.error("Error settling up:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const currencySymbol = getCurrencySymbol(userProfile?.currency);
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" 
+          onClick={onClose} 
+        />
+        <motion.div 
+          initial={{ opacity: 0, y: '100%' }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: '100%' }}
+          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+          className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] mt-auto sm:mt-0"
+        >
+          <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-slate-200 sm:hidden shrink-0" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6 sm:py-4 bg-white shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600">
+                <ArrowRightLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Settle up</h2>
+            </div>
+            <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-90" disabled={isSubmitting}>
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-5 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:pb-6">
+            {/* Avatar exchange */}
+            <div className="flex items-center justify-center gap-5 py-4">
+              <div className="flex flex-col items-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 font-bold text-xl shadow-sm overflow-hidden">
+                  {currentUser.photoURL ? (
+                    <img src={currentUser.photoURL} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                  ) : (
+                    currentUser.displayName?.[0]?.toUpperCase() || 'Y'
+                  )}
+                </div>
+                <span className="mt-2 text-xs font-semibold text-slate-500">You</span>
+              </div>
+              <motion.div
+                animate={{ x: [-3, 3, -3] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ArrowRightLeft className="h-6 w-6 text-slate-300" />
+              </motion.div>
+              <div className="flex flex-col items-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 font-bold text-xl shadow-sm overflow-hidden">
+                  {selectedFriend && users[selectedFriend]?.photoURL ? (
+                    <img src={users[selectedFriend].photoURL} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                  ) : (
+                    selectedFriend ? users[selectedFriend]?.displayName?.[0]?.toUpperCase() : '?'
+                  )}
+                </div>
+                <span className="mt-2 text-xs font-semibold text-slate-500">
+                  {selectedFriend ? users[selectedFriend]?.displayName?.split(' ')[0] : 'Friend'}
+                </span>
+              </div>
+            </div>
+
+            {/* Friend select */}
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-slate-600 mb-1.5">You paid to:</label>
+              <select
+                required
+                value={selectedFriend}
+                onChange={(e) => setSelectedFriend(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 sm:py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all bg-white disabled:opacity-50"
+              >
+                <option value="" disabled>Select a friend...</option>
+                {friendsIds.map(id => (
+                  <option key={id} value={id}>{users[id]?.displayName || id}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Amount */}
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-slate-600 mb-1.5">Amount</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-lg">{currencySymbol}</span>
+                <input
+                  type="number"
+                  required
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full rounded-xl border border-slate-200 pl-9 pr-4 py-3 text-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-bold text-slate-900 bg-slate-50/50 disabled:opacity-50"
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100 shrink-0">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto rounded-xl px-5 py-3 sm:py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors order-2 sm:order-1 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 sm:py-2.5 text-sm font-semibold text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all active:scale-[0.97] order-1 sm:order-2 disabled:opacity-70"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Recording...
+                  </>
+                ) : (
+                  'Record Payment'
+                )}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}

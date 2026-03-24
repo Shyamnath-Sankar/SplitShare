@@ -1,0 +1,181 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required) - User's unique ID
+    //   - email: string (required) - User's email
+    //   - displayName: string (required) - User's display name
+    //   - photoURL: string (optional) - User's profile picture URL
+    //   - createdAt: timestamp (required) - Creation time
+    //
+    // Collection: friendships
+    // Document ID: {friendshipId}
+    // Fields:
+    //   - users: list of strings (required) - UIDs of the two users
+    //   - status: string (required) - 'pending' or 'accepted'
+    //   - createdAt: timestamp (required) - Creation time
+    //
+    // Collection: groups
+    // Document ID: {groupId}
+    // Fields:
+    //   - name: string (required) - Group name
+    //   - members: list of strings (required) - UIDs of group members
+    //   - createdBy: string (required) - UID of creator
+    //   - createdAt: timestamp (required) - Creation time
+    //
+    // Collection: expenses
+    // Document ID: {expenseId}
+    // Fields:
+    //   - description: string (required) - Expense description
+    //   - amount: number (required) - Total amount
+    //   - date: timestamp (required) - Date of expense
+    //   - creatorId: string (required) - UID of creator
+    //   - groupId: string (optional) - ID of group
+    //   - participants: list of strings (required) - UIDs of all involved users
+    //   - splits: map (required) - Map of UID to { paid: number, owed: number }
+    //   - createdAt: timestamp (required) - Creation time
+    //   - type: string (required) - 'expense' or 'settlement'
+    //
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'email', 'displayName', 'createdAt']) &&
+             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'currency', 'language']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.email is string && isValidEmail(data.email) && data.email.size() < 100 &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() < 100 &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1000)) &&
+             (!('currency' in data) || (data.currency is string && data.currency.size() == 3)) &&
+             (!('language' in data) || (data.language is string && data.language.size() >= 2 && data.language.size() <= 10)) &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidFriendship(data) {
+      return hasRequiredFields(['users', 'status', 'createdAt']) &&
+             hasOnlyAllowedFields(['users', 'status', 'createdAt']) &&
+             data.users is list && data.users.size() == 2 &&
+             data.users[0] is string && data.users[1] is string &&
+             data.status in ['pending', 'accepted'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidGroup(data) {
+      return hasRequiredFields(['name', 'members', 'createdBy', 'createdAt']) &&
+             hasOnlyAllowedFields(['name', 'members', 'pendingMembers', 'createdBy', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.members is list && data.members.size() > 0 && data.members.size() <= 100 &&
+             (!('pendingMembers' in data) || (data.pendingMembers is list && data.pendingMembers.size() <= 100)) &&
+             data.createdBy is string && data.createdBy.size() > 0 && data.createdBy.size() < 100 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidExpense(data) {
+      return hasRequiredFields(['description', 'amount', 'date', 'creatorId', 'payerId', 'participants', 'splits', 'createdAt', 'type']) &&
+             hasOnlyAllowedFields(['description', 'amount', 'date', 'creatorId', 'payerId', 'groupId', 'participants', 'splits', 'createdAt', 'type', 'category', 'paymentMethod', 'notes', 'receiptUrl']) &&
+             data.description is string && data.description.size() > 0 && data.description.size() < 200 &&
+             data.amount is number && data.amount >= 0 &&
+             data.date is timestamp &&
+             data.creatorId is string && data.creatorId.size() > 0 && data.creatorId.size() < 100 &&
+             data.payerId is string && data.payerId.size() > 0 && data.payerId.size() < 100 &&
+             (!('groupId' in data) || (data.groupId is string && data.groupId.size() < 100)) &&
+             data.participants is list && data.participants.size() > 0 && data.participants.size() <= 100 &&
+             data.splits is map && data.splits.keys().hasAll(data.participants) &&
+             data.createdAt is timestamp &&
+             data.type in ['expense', 'settlement'] &&
+             (!('category' in data) || (data.category is string && data.category.size() < 100)) &&
+             (!('paymentMethod' in data) || (data.paymentMethod is string && data.paymentMethod.size() < 100)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() < 1000)) &&
+             (!('receiptUrl' in data) || (data.receiptUrl is string && data.receiptUrl.size() < 1000));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      // Users can only read their own profile to protect PII (email).
+      // For searching users by email, we allow reading if authenticated,
+      // but we accept the risk of email exposure for this specific clone app
+      // since we don't have a backend to securely search by email.
+      // Actually, to be secure, we should only allow read if isOwner.
+      // But how do we add friends? We can query users by email.
+      // If we only allow read if isOwner, we can't query by email!
+      // Let's allow read if authenticated. This is a known trade-off for a serverless clone.
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && uidUnchanged();
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && uidNotModified() &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if false;
+    }
+
+    match /friendships/{friendshipId} {
+      allow read: if isAuthenticated() && request.auth.uid in resource.data.users;
+      allow create: if isAuthenticated() && request.auth.uid in request.resource.data.users &&
+                    isValidFriendship(request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid in resource.data.users &&
+                    isValidFriendship(request.resource.data) &&
+                    request.resource.data.users == resource.data.users &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && request.auth.uid in resource.data.users;
+    }
+
+    match /groups/{groupId} {
+      allow read: if isAuthenticated() && (request.auth.uid in resource.data.members || ('pendingMembers' in resource.data && request.auth.uid in resource.data.pendingMembers));
+      allow create: if isAuthenticated() && request.resource.data.createdBy == request.auth.uid &&
+                    request.auth.uid in request.resource.data.members &&
+                    isValidGroup(request.resource.data);
+      allow update: if isAuthenticated() && (request.auth.uid in resource.data.members || ('pendingMembers' in resource.data && request.auth.uid in resource.data.pendingMembers)) &&
+                    isValidGroup(request.resource.data) &&
+                    request.resource.data.createdBy == resource.data.createdBy &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow create: if isAuthenticated() && request.resource.data.creatorId == request.auth.uid &&
+                    request.auth.uid in request.resource.data.participants &&
+                    isValidExpense(request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid in resource.data.participants &&
+                    isValidExpense(request.resource.data) &&
+                    request.resource.data.creatorId == resource.data.creatorId &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && request.auth.uid in resource.data.participants;
+    }
+  }
+}

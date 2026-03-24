@@ -1,0 +1,5 @@
+{
+  "name": "SplitShare",
+  "description": "A splitwise-like expense sharing application with groups, friends, and settlements.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A registered user of the application.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique identifier of the user." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "description": "The URL of the user's profile picture." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user was created." },
+        "currency": { "type": "string", "description": "The user's preferred currency code." },
+        "language": { "type": "string", "description": "The user's preferred language code." }
+      },
+      "required": ["uid", "email", "displayName", "createdAt"]
+    },
+    "Friendship": {
+      "title": "Friendship",
+      "description": "A friendship connection between two users.",
+      "type": "object",
+      "properties": {
+        "users": { "type": "array", "items": { "type": "string" }, "description": "The UIDs of the two users." },
+        "status": { "type": "string", "enum": ["pending", "accepted"], "description": "The status of the friendship." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the friendship was created." }
+      },
+      "required": ["users", "status", "createdAt"]
+    },
+    "Group": {
+      "title": "Group",
+      "description": "A group of users who share expenses.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the group." },
+        "members": { "type": "array", "items": { "type": "string" }, "description": "The UIDs of the group members." },
+        "createdBy": { "type": "string", "description": "The UID of the user who created the group." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the group was created." }
+      },
+      "required": ["name", "members", "createdBy", "createdAt"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "An expense or settlement shared between users.",
+      "type": "object",
+      "properties": {
+        "description": { "type": "string", "description": "A brief description of the expense." },
+        "amount": { "type": "number", "description": "The total amount of the expense." },
+        "date": { "type": "string", "format": "date-time", "description": "The date the expense occurred." },
+        "creatorId": { "type": "string", "description": "The UID of the user who recorded the expense." },
+        "payerId": { "type": "string", "description": "The UID of the user who paid the expense." },
+        "groupId": { "type": "string", "description": "The ID of the group this expense belongs to, if any." },
+        "participants": { "type": "array", "items": { "type": "string" }, "description": "The UIDs of all users involved in this expense." },
+        "splits": {
+          "type": "object",
+          "description": "A map of user UIDs to their paid and owed amounts.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "paid": { "type": "number" },
+              "owed": { "type": "number" }
+            },
+            "required": ["paid", "owed"]
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the expense was recorded." },
+        "type": { "type": "string", "enum": ["expense", "settlement"], "description": "Whether this is a regular expense or a settlement." },
+        "category": { "type": "string", "description": "The category of the expense." },
+        "paymentMethod": { "type": "string", "description": "How the expense was paid (e.g., Cash, Card, UPI)." },
+        "notes": { "type": "string", "description": "Additional notes or comments." },
+        "receiptUrl": { "type": "string", "description": "URL to the uploaded receipt image." }
+      },
+      "required": ["description", "amount", "date", "creatorId", "payerId", "participants", "splits", "createdAt", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles."
+    },
+    "/friendships/{friendshipId}": {
+      "schema": { "$ref": "#/entities/Friendship" },
+      "description": "Stores friendship connections."
+    },
+    "/groups/{groupId}": {
+      "schema": { "$ref": "#/entities/Group" },
+      "description": "Stores groups."
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Stores expenses and settlements."
+    }
+  }
+}
