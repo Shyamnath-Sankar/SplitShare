@@ -40,3 +40,4 @@ ios/
 *.sublime-workspace
 
 .vercel
+ffirebase-applet-config.json

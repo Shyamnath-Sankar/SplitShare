@@ -46,8 +46,8 @@ export default function Layout() {
               end={link.to === '/dashboard'}
               className={({ isActive }) => clsx(
                 'group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 relative',
-                isActive 
-                  ? 'bg-[#044d4b] text-white shadow-sm' 
+                isActive
+                  ? 'bg-[#044d4b] text-white shadow-sm'
                   : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
               )}
             >
@@ -91,7 +91,7 @@ export default function Layout() {
       {/* ─── Main Content ─── */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 h-[calc(4rem+env(safe-area-inset-top))] sm:h-[calc(5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] flex items-center justify-between px-4 sm:px-10">
+        <header className="sticky top-0 z-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 h-16 sm:h-20 flex items-center justify-between px-4 sm:px-10">
           <div className="md:hidden flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#044d4b] shadow-sm border border-[#044d4b] overflow-hidden p-[2px]">
               <img src="/screen1.png" alt="Logo" className="h-full w-full object-contain" />
