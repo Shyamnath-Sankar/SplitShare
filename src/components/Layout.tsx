@@ -12,7 +12,7 @@ export default function Layout() {
   const location = useLocation();
 
   const navLinks = [
-    { to: '/', icon: Home, label: 'Dashboard' },
+    { to: '/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/recent', icon: Clock, label: 'Activity' },
     { to: '/friends', icon: Users, label: 'Friends' },
     { to: '/groups', icon: Folder, label: 'Groups' },
@@ -29,10 +29,10 @@ export default function Layout() {
         {/* Logo */}
         <div className="flex h-20 items-center px-7">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25">
-              <Sparkles className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#044d4b] shadow-sm overflow-hidden p-1">
+              <img src="/screen1.png" alt="Logo" className="h-full w-full object-contain" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Split<span className="gradient-text">Share</span></h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Split<span className="text-[#044d4b]">Share</span></h1>
           </div>
         </div>
 
@@ -43,24 +43,17 @@ export default function Layout() {
             <NavLink
               key={link.to}
               to={link.to}
-              end={link.to === '/'}
+              end={link.to === '/dashboard'}
               className={({ isActive }) => clsx(
                 'group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 relative',
                 isActive 
-                  ? 'bg-gradient-to-r from-emerald-50 to-emerald-50/50 text-emerald-700 shadow-sm' 
+                  ? 'bg-[#044d4b] text-white shadow-sm' 
                   : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
               )}
             >
               {({ isActive }) => (
                 <>
-                  {isActive && (
-                    <motion.div
-                      layoutId="sidebar-active"
-                      className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-to-b from-emerald-500 to-emerald-600"
-                      transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                    />
-                  )}
-                  <link.icon className={clsx("h-[18px] w-[18px] transition-colors", isActive ? "text-emerald-600" : "group-hover:text-emerald-500")} />
+                  <link.icon className={clsx("h-[18px] w-[18px] transition-colors", isActive ? "text-white" : "group-hover:text-slate-800")} />
                   {link.label}
                 </>
               )}
@@ -98,12 +91,12 @@ export default function Layout() {
       {/* ─── Main Content ─── */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 h-16 sm:h-20 flex items-center justify-between px-4 sm:px-10">
+        <header className="sticky top-0 z-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 h-[calc(4rem+env(safe-area-inset-top))] sm:h-[calc(5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] flex items-center justify-between px-4 sm:px-10">
           <div className="md:hidden flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20">
-              <Sparkles className="h-4 w-4 text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#044d4b] shadow-sm border border-[#044d4b] overflow-hidden p-[2px]">
+              <img src="/screen1.png" alt="Logo" className="h-full w-full object-contain" />
             </div>
-            <h1 className="text-xl font-bold text-slate-900">Split<span className="gradient-text">Share</span></h1>
+            <h1 className="text-xl font-bold text-[#044d4b]">SplitShare</h1>
           </div>
           <div className="hidden md:block flex-1" />
           <div className="flex items-center gap-2 sm:gap-3">
@@ -111,14 +104,14 @@ export default function Layout() {
               to="/settings"
               className={({ isActive }) => clsx(
                 'md:hidden flex h-10 w-10 items-center justify-center rounded-full transition-all',
-                isActive ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100/80 text-slate-500 hover:bg-slate-200/80'
+                isActive ? 'bg-[#044d4b] text-white' : 'bg-slate-100/80 text-slate-500 hover:bg-slate-200/80'
               )}
             >
               <Settings className="h-5 w-5" />
             </NavLink>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2.5 sm:px-5 sm:py-2.5 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-emerald-500/25 active:scale-[0.96]"
+              className="group flex items-center gap-2 rounded-xl bg-[#044d4b] px-4 py-2.5 sm:px-5 sm:py-2.5 text-sm font-semibold text-white transition-all hover:shadow-lg active:scale-[0.96]"
             >
               <Plus className="h-4 w-4 transition-transform group-hover:rotate-90 duration-300" />
               <span className="hidden sm:inline">Add Expense</span>
@@ -145,33 +138,24 @@ export default function Layout() {
       </main>
 
       {/* ─── Mobile Bottom Nav ─── */}
-      <nav className="md:hidden fixed bottom-0 w-full bg-white/80 backdrop-blur-xl border-t border-slate-200/40 flex justify-around pb-[env(safe-area-inset-bottom)] pt-1.5 z-30">
+      <nav className="md:hidden fixed bottom-0 w-full bg-white backdrop-blur-xl border-t border-slate-100 flex justify-around pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 z-30">
         {mobileNavLinks.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
-            end={link.to === '/'}
+            end={link.to === '/dashboard'}
             className={({ isActive }) => clsx(
-              'relative flex flex-col items-center py-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider transition-colors min-w-[52px]',
-              isActive ? 'text-emerald-600' : 'text-slate-400'
+              'relative flex flex-col items-center py-2 px-4 rounded-3xl text-[10px] font-semibold uppercase tracking-wider transition-colors min-w-[64px]',
+              isActive ? 'bg-[#044d4b] text-white shadow-sm' : 'text-slate-400 bg-transparent'
             )}
           >
             {({ isActive }) => (
               <>
-                <div className="relative">
-                  <link.icon className={clsx(
-                    "h-5 w-5 mb-1 transition-all duration-200",
-                    isActive ? "text-emerald-600 scale-110" : ""
-                  )} />
-                  {isActive && (
-                    <motion.div
-                      layoutId="mobile-nav-dot"
-                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-emerald-500"
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    />
-                  )}
-                </div>
-                <span className={clsx(isActive ? "text-emerald-600" : "")}>{link.label}</span>
+                <link.icon className={clsx(
+                  "h-5 w-5 mb-1 transition-all duration-200",
+                  isActive ? "text-white" : ""
+                )} />
+                <span>{link.label}</span>
               </>
             )}
           </NavLink>

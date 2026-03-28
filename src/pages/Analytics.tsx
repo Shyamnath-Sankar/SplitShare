@@ -9,7 +9,7 @@ import {
 import { format } from 'date-fns';
 import { PieChart as PieChartIcon, BarChart3, TrendingUp, Users, Wallet } from 'lucide-react';
 
-const COLORS = ['#10b981', '#6366f1', '#f59e0b', '#f43f5e', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+const COLORS = ['#044d4b', '#1c5e5c', '#34706d', '#4c817e', '#64938f', '#7ca5a0', '#94b6b1', '#acc8c2'];
 
 export default function Analytics() {
   const { expenses, users } = useData();
@@ -115,52 +115,55 @@ export default function Analytics() {
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="space-y-6 sm:space-y-8"
+      className="space-y-6 sm:space-y-8 max-w-lg mx-auto pb-[calc(4rem+env(safe-area-inset-bottom))]"
     >
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Analytics</h1>
-        <p className="mt-1 text-sm sm:text-base text-slate-500">Insights into your spending habits.</p>
+      <div className="flex items-end justify-between px-1">
+        <h1 className="text-3xl font-bold tracking-tight text-[#044d4b]">Analytics</h1>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#798a83] mb-1">Insights</span>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-3">
-        <motion.div variants={itemVariants} className="rounded-2xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-sm border border-slate-100 flex items-center gap-4 card-hover">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600 shrink-0">
-            <TrendingUp className="h-5 w-5" />
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+        <motion.div variants={itemVariants} className="rounded-3xl bg-[#044d4b] p-5 sm:p-6 flex items-center gap-4 relative overflow-hidden">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#1a5b59] text-[#85dbcd] shrink-0 relative z-10">
+            <TrendingUp className="h-6 w-6" />
+          </div>
+          <div className="relative z-10">
+            <p className="text-[10px] font-bold text-[#85dbcd] uppercase tracking-widest mb-0.5">Total Spent</p>
+            <p className="text-2xl font-bold text-white">{currencySymbol}{totalSpent.toFixed(2)}</p>
+          </div>
+          <TrendingUp className="absolute right-[-10%] bottom-[-20%] h-32 w-32 text-white/[0.03] pointer-events-none" />
+        </motion.div>
+        
+        <motion.div variants={itemVariants} className="rounded-3xl bg-[#f5f7f6] p-5 sm:p-6 border border-slate-100 flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#eaeeee] text-[#044d4b] shrink-0">
+            <Wallet className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Spent</p>
-            <p className="text-2xl font-bold text-slate-900">{currencySymbol}{totalSpent.toFixed(2)}</p>
+            <p className="text-[10px] font-bold text-[#6e8581] uppercase tracking-widest mb-0.5">Transactions</p>
+            <p className="text-xl font-bold text-[#1a2d2a]">{expenseCount}</p>
           </div>
         </motion.div>
-        <motion.div variants={itemVariants} className="rounded-2xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-sm border border-slate-100 flex items-center gap-4 card-hover">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 shrink-0">
-            <Wallet className="h-5 w-5" />
+        
+        <motion.div variants={itemVariants} className="rounded-3xl bg-[#f5f7f6] p-5 sm:p-6 border border-slate-100 flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#eaeeee] text-[#044d4b] shrink-0">
+            <PieChartIcon className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Transactions</p>
-            <p className="text-2xl font-bold text-slate-900">{expenseCount}</p>
-          </div>
-        </motion.div>
-        <motion.div variants={itemVariants} className="rounded-2xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-sm border border-slate-100 flex items-center gap-4 card-hover">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 shrink-0">
-            <PieChartIcon className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Categories</p>
-            <p className="text-2xl font-bold text-slate-900">{categoryData.length}</p>
+            <p className="text-[10px] font-bold text-[#6e8581] uppercase tracking-widest mb-0.5">Categories</p>
+            <p className="text-xl font-bold text-[#1a2d2a]">{categoryData.length}</p>
           </div>
         </motion.div>
       </div>
 
       <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Category Breakdown */}
-        <motion.div variants={itemVariants} className="rounded-2xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-sm border border-slate-100">
-          <div className="flex items-center gap-2.5 mb-6">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-50 to-violet-100">
-              <PieChartIcon className="h-4 w-4 text-violet-600" />
+        <motion.div variants={itemVariants} className="rounded-3xl bg-[#f5f7f6] p-5 sm:p-6 border border-slate-100">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaeeee]">
+              <PieChartIcon className="h-5 w-5 text-[#044d4b]" />
             </div>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-900">Spending by Category</h2>
+            <h2 className="text-base font-bold text-[#1a2d2a]">Spending by Category</h2>
           </div>
           {categoryData.length > 0 ? (
             <div className="h-[280px] sm:h-[300px] w-full">
@@ -191,54 +194,54 @@ export default function Analytics() {
         </motion.div>
 
         {/* Monthly Spending */}
-        <motion.div variants={itemVariants} className="rounded-2xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-sm border border-slate-100">
-          <div className="flex items-center gap-2.5 mb-6">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-50 to-sky-100">
-              <BarChart3 className="h-4 w-4 text-sky-600" />
+        <motion.div variants={itemVariants} className="rounded-3xl bg-[#f5f7f6] p-5 sm:p-6 border border-slate-100">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaeeee]">
+              <BarChart3 className="h-5 w-5 text-[#044d4b]" />
             </div>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-900">Monthly Spending</h2>
+            <h2 className="text-base font-bold text-[#1a2d2a]">Monthly Spending</h2>
           </div>
           {monthlyData.length > 0 ? (
             <div className="h-[280px] sm:h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={(value) => `${currencySymbol}${value}`} width={40} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                  <Bar dataKey="value" name="Spent" fill="#6366f1" radius={[6, 6, 0, 0]} maxBarSize={45} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8e9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6e8581', fontSize: 10 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6e8581', fontSize: 10 }} tickFormatter={(value) => `${currencySymbol}${value}`} width={40} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#eaeeee' }} />
+                  <Bar dataKey="value" name="Spent" fill="#044d4b" radius={[6, 6, 0, 0]} maxBarSize={45} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-[280px] flex items-center justify-center text-slate-400">No data available</div>
+            <div className="h-[280px] flex items-center justify-center text-[#6e8581]">No data available</div>
           )}
         </motion.div>
 
         {/* Who Spent on Whom */}
-        <motion.div variants={itemVariants} className="rounded-2xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-sm border border-slate-100 lg:col-span-2">
-          <div className="flex items-center gap-2.5 mb-6">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-rose-50 to-rose-100">
-              <Users className="h-4 w-4 text-rose-600" />
+        <motion.div variants={itemVariants} className="rounded-3xl bg-[#f5f7f6] p-5 sm:p-6 border border-slate-100 lg:col-span-2">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaeeee]">
+              <Users className="h-5 w-5 text-[#044d4b]" />
             </div>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-900">Who Spent on Whom (Top 5)</h2>
+            <h2 className="text-base font-bold text-[#1a2d2a]">Who Spent on Whom (Top 5)</h2>
           </div>
           {friendSpendingData.length > 0 ? (
             <div className="h-[280px] sm:h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={friendSpendingData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={(value) => `${currencySymbol}${value}`} width={40} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8e9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6e8581', fontSize: 10 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6e8581', fontSize: 10 }} tickFormatter={(value) => `${currencySymbol}${value}`} width={40} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#eaeeee' }} />
                   <Legend verticalAlign="top" height={36} iconType="circle" iconSize={8} wrapperStyle={{ paddingBottom: '20px' }} />
-                  <Bar dataKey="iPaidForThem" name="I paid for them" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={35} />
-                  <Bar dataKey="theyPaidForMe" name="They paid for me" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={35} />
+                  <Bar dataKey="iPaidForThem" name="I paid for them" fill="#044d4b" radius={[4, 4, 0, 0]} maxBarSize={35} />
+                  <Bar dataKey="theyPaidForMe" name="They paid for me" fill="#64938f" radius={[4, 4, 0, 0]} maxBarSize={35} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-[280px] flex items-center justify-center text-slate-400">No data available</div>
+            <div className="h-[280px] flex items-center justify-center text-[#6e8581]">No data available</div>
           )}
         </motion.div>
       </div>

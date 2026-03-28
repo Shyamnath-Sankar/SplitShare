@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { FolderPlus, Users, Check, X, Settings, UserPlus, UserMinus, AlertTriangle, Loader2 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { FolderPlus, Users, Check, X, Settings, UserPlus, UserMinus, AlertTriangle, Loader2, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { getCurrencySymbol } from '../utils/currency';
 
 export default function Groups() {
@@ -17,8 +17,11 @@ export default function Groups() {
   const [managingGroupId, setManagingGroupId] = useState<string | null>(null);
   const [inviteSelected, setInviteSelected] = useState<string[]>([]);
   const [groupToDelete, setGroupToDelete] = useState<{id: string, name: string} | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   if (!currentUser) return null;
+
+  const currencySymbol = getCurrencySymbol(userProfile?.currency);
 
   const friendsIds = friendships
     .filter(f => f.status === 'accepted')
@@ -73,98 +76,34 @@ export default function Groups() {
   const groupIconColors = ['text-indigo-600', 'text-violet-600', 'text-sky-600', 'text-amber-600', 'text-rose-600'];
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Groups</h1>
-        <p className="mt-1 text-sm sm:text-base text-slate-500">Organize expenses with multiple people.</p>
-      </div>
-
-      {/* Create Group */}
-      <div className="rounded-2xl sm:rounded-3xl bg-white p-5 sm:p-8 shadow-sm border border-slate-100">
-        <div className="flex items-center gap-3 mb-4 sm:mb-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100">
-            <FolderPlus className="h-4 w-4 text-indigo-600" />
-          </div>
-          <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Create a group</h2>
-        </div>
-        <form onSubmit={handleCreateGroup} className="space-y-4 sm:space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">Group Name</label>
-            <input
-              type="text"
-              placeholder="e.g. Apartment, Trip to Hawaii"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={isSubmitting}
-              className="w-full rounded-xl border border-slate-200 px-4 sm:px-5 py-2.5 sm:py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-slate-50/50 placeholder:text-slate-400 disabled:opacity-50"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">Add Members</label>
-            <select
-              multiple
-              value={selectedFriends}
-              onChange={(e) => setSelectedFriends(Array.from(e.target.selectedOptions).map((option: any) => option.value))}
-              disabled={isSubmitting}
-              className="w-full rounded-xl border border-slate-200 p-2.5 sm:p-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all min-h-[100px] sm:min-h-[120px] bg-slate-50/50 disabled:opacity-50"
-            >
-              {friendsIds.map(id => (
-                <option key={id} value={id} className="p-2 rounded-md hover:bg-slate-100">{users[id]?.displayName || id}</option>
-              ))}
-            </select>
-            <p className="text-xs text-slate-400 mt-2">Hold Ctrl/Cmd to select multiple friends.</p>
-          </div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.97] disabled:opacity-70"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              <>
-                <FolderPlus className="h-5 w-5" />
-                Create Group
-              </>
-            )}
-          </button>
-        </form>
-        {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 text-sm font-medium text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{error}</motion.p>}
-        {success && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg">{success}</motion.p>}
+    <div className="space-y-6 sm:space-y-8 max-w-lg mx-auto pb-[calc(4rem+env(safe-area-inset-bottom))]">
+      <div className="flex items-center justify-between px-1">
+        <h1 className="text-3xl font-bold tracking-tight text-[#044d4b]">Groups</h1>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#798a83] mb-1">Network List</span>
       </div>
 
       {/* Group Invitations */}
       {pendingGroups.length > 0 && (
-        <div className="rounded-2xl sm:rounded-3xl bg-white shadow-sm border border-emerald-100 overflow-hidden">
-          <div className="border-b border-emerald-100 bg-gradient-to-r from-emerald-50/80 to-emerald-50/30 px-5 sm:px-8 py-4 sm:py-5 flex items-center justify-between">
-            <h3 className="text-base sm:text-lg font-semibold text-emerald-900">Group Invitations</h3>
-            <span className="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded-full">{pendingGroups.length}</span>
-          </div>
-          <ul className="divide-y divide-emerald-50">
+        <div className="rounded-3xl bg-[#f5f7f6] p-4 border border-slate-100 mb-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+          <h3 className="text-sm font-bold text-[#1a2d2a] mb-3 ml-2">Invitations ({pendingGroups.length})</h3>
+          <ul className="space-y-2 ml-2">
             {pendingGroups.map((group) => {
               const creator = users[group.createdBy];
               return (
-                <li key={group.id} className="flex items-center justify-between p-4 sm:p-6 hover:bg-emerald-50/30 transition-colors">
-                  <div className="flex items-center gap-4 sm:gap-5">
-                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600">
-                      <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+                <li key={group.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d0d6d3] text-[#486360]">
+                      <Users className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-base sm:text-lg font-semibold text-slate-900">{group.name}</p>
-                      <p className="text-xs sm:text-sm text-slate-500">Invited by {creator?.displayName || 'Unknown'}</p>
+                      <p className="font-semibold text-[#1a2d2a]">{group.name}</p>
+                      <p className="text-xs text-[#6e8581]">Invited by {creator?.displayName || 'Unknown'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => acceptGroupInvite(group.id)} className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-all active:scale-90" title="Accept">
-                      <Check className="h-5 w-5" />
-                    </button>
-                    <button onClick={() => rejectGroupInvite(group.id)} className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 transition-all active:scale-90" title="Decline">
-                      <X className="h-5 w-5" />
-                    </button>
+                    <button onClick={() => acceptGroupInvite(group.id)} className="p-2 bg-[#044d4b] text-white rounded-xl hover:bg-[#033f3d] transition-colors"><Check className="h-4 w-4" /></button>
+                    <button onClick={() => rejectGroupInvite(group.id)} className="p-2 bg-[#eaeeee] text-[#6e8581] rounded-xl hover:bg-[#d0d6d3] transition-colors"><X className="h-4 w-4" /></button>
                   </div>
                 </li>
               );
@@ -173,87 +112,129 @@ export default function Groups() {
         </div>
       )}
 
-      {/* Active Groups */}
-      <div className="rounded-2xl sm:rounded-3xl bg-white shadow-sm border border-slate-100 overflow-hidden">
-        <div className="border-b border-slate-100 bg-slate-50/30 px-5 sm:px-8 py-4 sm:py-5">
-          <h3 className="text-base sm:text-lg font-semibold text-slate-900">Your groups</h3>
-        </div>
-        {activeGroups.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 sm:p-16 text-center">
-            <div className="mb-4 sm:mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50">
-              <Users className="h-8 w-8 text-slate-300" />
+      {/* Create Group Form (Inline) */}
+      <AnimatePresence>
+        {isCreating && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, scale: 0.95 }}
+            animate={{ opacity: 1, height: 'auto', scale: 1 }}
+            exit={{ opacity: 0, height: 0, scale: 0.95 }}
+            className="overflow-hidden mb-6"
+          >
+            <div className="bg-[#f5f7f6] rounded-3xl p-5 border border-slate-100">
+              <div className="flex justify-between items-center mb-4 mt-2 px-1">
+                <h2 className="text-sm font-bold text-[#1a2d2a]">Create a Group</h2>
+                <button onClick={() => setIsCreating(false)} className="text-[#6e8581]"><X className="h-4 w-4" /></button>
+              </div>
+              <form onSubmit={handleCreateGroup} className="space-y-4">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Group Name (e.g. Hawaii Trip)"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isSubmitting}
+                    className="w-full rounded-2xl bg-white px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#044d4b]/20"
+                    required
+                  />
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {friendsIds.map(id => {
+                    const isSelected = selectedFriends.includes(id);
+                    return (
+                      <div 
+                        key={id}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedFriends(selectedFriends.filter(fId => fId !== id));
+                          } else {
+                            setSelectedFriends([...selectedFriends, id]);
+                          }
+                        }}
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${isSelected ? 'border-[#044d4b] bg-emerald-50/50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+                      >
+                         <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${isSelected ? 'border-[#044d4b] bg-[#044d4b]' : 'border-slate-300'}`}>
+                           {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
+                         </div>
+                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 overflow-hidden shrink-0">
+                           {users[id]?.photoURL ? <img src={users[id].photoURL} referrerPolicy="no-referrer" className="h-full w-full object-cover" /> : users[id]?.displayName?.[0]?.toUpperCase()}
+                         </div>
+                         <span className="text-sm font-medium text-slate-700">{users[id]?.displayName || id}</span>
+                      </div>
+                    );
+                  })}
+                  {friendsIds.length === 0 && <p className="text-xs text-slate-400 p-2">You don't have any friends to add yet.</p>}
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-xl bg-[#044d4b] px-4 py-3.5 text-xs font-bold uppercase tracking-wide text-white transition-all hover:bg-[#033f3d] disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderPlus className="h-4 w-4" />}
+                  Create Group
+                </button>
+              </form>
+              {error && <p className="mt-3 text-xs text-rose-600 font-medium px-1">{error}</p>}
+              {success && <p className="mt-3 text-xs text-emerald-600 font-medium px-1">{success}</p>}
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-slate-900">No groups yet</h3>
-            <p className="mt-2 text-sm sm:text-base text-slate-500 max-w-sm">Create a group to easily split expenses for trips, apartments, or events.</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
+      {/* Groups List */}
+      <div className="mb-4">
+        {activeGroups.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eaeeee] mx-auto">
+              <Users className="h-6 w-6 text-[#798a83]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[#1a2d2a]">No active groups</h3>
+            <p className="mt-2 text-sm text-[#6e8581]">Create one to easily split expenses.</p>
           </div>
         ) : (
           <motion.ul 
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="divide-y divide-slate-50"
+            className="space-y-3"
           >
             {activeGroups.map((group, index) => {
               const balance = getGroupBalance(group.id);
-              const colorIdx = index % groupColors.length;
               return (
-                <motion.li variants={itemVariants} key={group.id} className="flex items-center justify-between p-4 sm:p-6 hover:bg-slate-50/50 transition-colors">
-                  <div className="flex items-center gap-4 sm:gap-5">
-                    <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br ${groupColors[colorIdx]} ${groupIconColors[colorIdx]}`}>
-                      <Users className="h-5 w-5 sm:h-6 sm:w-6" />
-                    </div>
-                    <div>
-                      <p className="text-base sm:text-lg font-semibold text-slate-900">{group.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {/* Member avatar stack */}
-                        <div className="flex -space-x-1.5">
-                          {group.members.slice(0, 4).map(mId => (
-                            <div key={mId} className="h-5 w-5 rounded-full bg-slate-200 border border-white overflow-hidden flex items-center justify-center text-[8px] font-bold text-slate-500">
-                              {users[mId]?.photoURL ? (
-                                <img src={users[mId].photoURL} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
-                              ) : (
-                                users[mId]?.displayName?.[0]?.toUpperCase()
-                              )}
-                            </div>
-                          ))}
-                          {group.members.length > 4 && (
-                            <div className="h-5 w-5 rounded-full bg-slate-100 border border-white flex items-center justify-center text-[8px] font-bold text-slate-400">
-                              +{group.members.length - 4}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs text-slate-400">{group.members.length} members</span>
+                <motion.li variants={itemVariants} key={group.id} className="flex flex-col p-4 rounded-3xl bg-[#f5f7f6] transition-colors relative">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#044d4b] text-white font-bold text-lg shrink-0">
+                        {group.name.substring(0, 1).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-base font-bold text-[#1a2d2a] mb-0.5">{group.name}</p>
+                        <p className="text-xs text-[#6e8581]">{group.members.length} members • {balance === 0 ? 'Settled up' : 'Active'}</p>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right flex items-center gap-3">
-                    <div>
-                      {balance > 0.01 ? (
-                        <div className="text-sm">
-                          <span className="text-slate-400 block mb-0.5 text-[10px] font-medium uppercase tracking-wide">you are owed</span>
-                          <span className="font-bold text-emerald-600">{getCurrencySymbol(userProfile?.currency)}{balance.toFixed(2)}</span>
-                        </div>
-                      ) : balance < -0.01 ? (
-                        <div className="text-sm">
-                          <span className="text-slate-400 block mb-0.5 text-[10px] font-medium uppercase tracking-wide">you owe</span>
-                          <span className="font-bold text-rose-600">{getCurrencySymbol(userProfile?.currency)}{Math.abs(balance).toFixed(2)}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-md">Settled</span>
+                    <div className="text-right flex items-center gap-3">
+                      <div>
+                        {balance > 0.01 ? (
+                          <span className="font-bold text-[#076c65] text-base">+{currencySymbol}{balance.toFixed(2)}</span>
+                        ) : balance < -0.01 ? (
+                          <span className="font-bold text-[#b53f3f] text-base">-{currencySymbol}{Math.abs(balance).toFixed(2)}</span>
+                        ) : (
+                          <span className="text-xs font-bold text-[#6e8581] uppercase tracking-widest">Even</span>
+                        )}
+                      </div>
+                      {group.createdBy === currentUser.uid && (
+                        <button
+                          onClick={() => {
+                            setManagingGroupId(group.id);
+                            setInviteSelected([]);
+                          }}
+                          className="p-2 text-[#6e8581] hover:text-[#044d4b] transition-colors"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
                       )}
                     </div>
-                    {group.createdBy === currentUser.uid && (
-                      <button
-                        onClick={() => {
-                          setManagingGroupId(group.id);
-                          setInviteSelected([]);
-                        }}
-                        className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all active:scale-90"
-                        title="Manage Members"
-                      >
-                        <Settings className="h-5 w-5" />
-                      </button>
-                    )}
                   </div>
                 </motion.li>
               );
@@ -261,6 +242,24 @@ export default function Groups() {
           </motion.ul>
         )}
       </div>
+
+      {/* Start New Group Banner */}
+      <motion.div variants={itemVariants} className="rounded-3xl bg-[#044d4b] p-6 lg:p-8 text-white relative overflow-hidden mt-6 shadow-sm">
+        <h3 className="text-lg lg:text-xl font-bold mb-3 z-10 relative">Start a new group</h3>
+        <p className="text-sm text-[#85dbcd] mb-6 max-w-[80%] leading-relaxed z-10 relative">
+          Create shared ledgers for trips, housemates, or events instantly.
+        </p>
+        <button 
+          onClick={() => {
+            setIsCreating(!isCreating);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="relative z-10 flex justify-center items-center rounded-full bg-white px-5 py-3 text-xs font-bold uppercase tracking-widest text-[#044d4b] transition-all hover:bg-slate-50 active:scale-[0.98]"
+        >
+          Create Now
+        </button>
+        <FolderPlus className="absolute right-[-10%] bottom-[-20%] h-36 w-36 text-[#155b59] pointer-events-none" />
+      </motion.div>
 
       {/* Manage Group Modal */}
       {currentManagingGroup && (
@@ -282,21 +281,37 @@ export default function Groups() {
               <div>
                 <h4 className="text-sm font-semibold text-slate-900 mb-3">Invite Friends</h4>
                 <div className="flex flex-col gap-2">
-                  <select
-                    multiple
-                    value={inviteSelected}
-                    onChange={(e) => setInviteSelected(Array.from(e.target.selectedOptions).map((option: any) => option.value))}
-                    className="w-full rounded-xl border border-slate-200 p-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none min-h-[100px] bg-slate-50/50"
-                  >
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                     {friendsIds
                       .filter(id => !currentManagingGroup.members.includes(id) && !currentManagingGroup.pendingMembers?.includes(id))
-                      .map(id => (
-                        <option key={id} value={id} className="p-2 rounded-md hover:bg-slate-100">
-                          {users[id]?.displayName || id}
-                        </option>
-                      ))}
-                  </select>
-                  <p className="text-xs text-slate-400">Hold Ctrl/Cmd to select multiple friends.</p>
+                      .map(id => {
+                        const isSelected = inviteSelected.includes(id);
+                        return (
+                          <div 
+                            key={id}
+                            onClick={() => {
+                              if (isSelected) {
+                                setInviteSelected(inviteSelected.filter(fId => fId !== id));
+                              } else {
+                                setInviteSelected([...inviteSelected, id]);
+                              }
+                            }}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${isSelected ? 'border-emerald-600 bg-emerald-50/50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+                          >
+                             <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}>
+                               {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
+                             </div>
+                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 overflow-hidden shrink-0">
+                               {users[id]?.photoURL ? <img src={users[id].photoURL} referrerPolicy="no-referrer" className="h-full w-full object-cover" /> : users[id]?.displayName?.[0]?.toUpperCase()}
+                             </div>
+                             <span className="text-sm font-medium text-slate-700">{users[id]?.displayName || id}</span>
+                          </div>
+                        );
+                      })}
+                    {friendsIds.filter(id => !currentManagingGroup.members.includes(id) && !currentManagingGroup.pendingMembers?.includes(id)).length === 0 && (
+                      <p className="text-xs text-slate-400 p-2 text-center bg-slate-50 rounded-xl">All your friends are already in this group.</p>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={async () => {

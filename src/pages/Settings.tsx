@@ -14,7 +14,7 @@ const languages = [
 ];
 
 export default function Settings() {
-  const { userProfile, updateUserProfile } = useAuth();
+  const { userProfile, updateUserProfile, logout } = useAuth();
   const [displayName, setDisplayName] = useState(userProfile?.displayName || '');
   const [currency, setCurrency] = useState(userProfile?.currency || 'USD');
   const [language, setLanguage] = useState(userProfile?.language || 'en');
@@ -187,6 +187,17 @@ export default function Settings() {
             </button>
           </div>
         </form>
+
+        <div className="mt-8 pt-6 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={logout}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-slate-50 px-6 py-3.5 text-sm font-semibold text-slate-600 transition-all hover:bg-rose-50 hover:text-rose-600 active:scale-[0.97] border border-slate-200 hover:border-rose-200 mx-auto"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Sign out
+          </button>
+        </div>
       </div>
     </motion.div>
   );

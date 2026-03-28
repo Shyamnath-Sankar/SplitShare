@@ -1,26 +1,42 @@
+# Dependencies
 node_modules/
-build/
-dist/
+.pnp
+.pnp.js
+
+# Testing
 coverage/
+
+# Production
+dist/
+build/
+
+# Misc
 .DS_Store
 *.log
-.env*
-!.env.example
+.eslintcache
 
-# Android
-android/.gradle/
-android/.idea/
-android/local.properties
-android/app/build/
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
 
-# Firebase
-firebase-applet-config.json
+
+# capacitor
+android/
+ios/
+
+# vercel
+.vercel
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
-# OS
-Thumbs.db
+.vercel

@@ -8,20 +8,21 @@
 
 /* ─── Root design tokens ─── */
 :root {
-  --color-brand: #10b981;
-  --color-brand-dark: #059669;
-  --color-brand-light: #34d399;
-  --color-surface: #f8fafc;
+  --color-brand: #044d4b;
+  --color-brand-dark: #023634;
+  --color-brand-light: #076c65;
+  --color-brand-subtle: #e6efee;
+  --color-surface: #f5f7f6;
   --color-surface-card: #ffffff;
-  --color-surface-elevated: rgba(255,255,255,0.85);
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-border: rgba(148,163,184,0.18);
-  --gradient-brand: linear-gradient(135deg, #10b981, #059669);
-  --gradient-accent: linear-gradient(135deg, #6366f1, #8b5cf6);
-  --gradient-warm: linear-gradient(135deg, #f43f5e, #fb923c);
-  --gradient-surface: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.25));
+  --color-surface-elevated: rgba(255,255,255,0.95);
+  --color-text-primary: #121e1d;
+  --color-text-secondary: #586968;
+  --color-border: rgba(4, 77, 75, 0.1);
+  --gradient-brand: linear-gradient(135deg, #076c65, #044d4b);
+  --gradient-accent: linear-gradient(135deg, #044d4b, #033f3d);
+  --gradient-warm: linear-gradient(135deg, #eaada1, #e99e8d);
+  --gradient-surface: linear-gradient(180deg, #f5f7f6 0%, #edf1f0 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
   --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
   --shadow-elevated: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
   --shadow-glow-brand: 0 0 24px rgba(16,185,129,0.15);

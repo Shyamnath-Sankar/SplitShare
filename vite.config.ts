@@ -12,7 +12,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icons/*.svg'],
+        includeAssets: ['screen1.png'],
         manifest: false, // We use our own public/manifest.json
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],

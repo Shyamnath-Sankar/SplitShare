@@ -167,7 +167,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         status: 'pending', // Require acceptance
         createdAt: serverTimestamp(),
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (['User not found with that email.', 'You cannot add yourself as a friend.', 'Friendship already exists.'].includes(error?.message)) {
+        throw error;
+      }
       handleFirestoreError(error, OperationType.CREATE, 'friendships');
       throw error;
     }
