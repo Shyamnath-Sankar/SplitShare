@@ -40,4 +40,4 @@ ios/
 *.sublime-workspace
 
 .vercel
-ffirebase-applet-config.json
+firebase-applet-config.json
