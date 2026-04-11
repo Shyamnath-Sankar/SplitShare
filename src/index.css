@@ -47,11 +47,17 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
 }
 
-/* ─── PWA Standalone mode ─── */
-@media (display-mode: standalone) {
-  body {
-    padding-top: env(safe-area-inset-top);
-  }
+/* ─── Safe Area Handling (Capacitor/Mobile) ─── */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --mobile-top-padding: 0px;
+}
+
+body.native-platform {
+  --mobile-top-padding: 32px;
+  padding-top: var(--mobile-top-padding);
+  padding-bottom: var(--safe-area-inset-bottom);
 }
 
 /* ─── Scrollbar ─── */

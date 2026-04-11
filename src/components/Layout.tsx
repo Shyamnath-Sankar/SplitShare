@@ -138,7 +138,7 @@ export default function Layout() {
       </main>
 
       {/* ─── Mobile Bottom Nav ─── */}
-      <nav className="md:hidden fixed bottom-0 w-full bg-white backdrop-blur-xl border-t border-slate-100 flex justify-around pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 z-30">
+      <nav className="md:hidden fixed bottom-0 w-full bg-white backdrop-blur-xl border-t border-slate-100 flex justify-around pb-[calc(1rem+var(--safe-area-inset-bottom))] pt-2 z-30">
         {mobileNavLinks.map((link) => (
           <NavLink
             key={link.to}

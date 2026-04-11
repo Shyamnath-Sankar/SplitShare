@@ -1,6 +1,6 @@
 export default function TermsAndCondition() {
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-4 pt-[var(--mobile-top-padding)]">
       <div className="max-w-3xl mx-auto">
         <strong className="text-2xl font-bold">Terms & Conditions</strong>
         <p className="mt-4">These terms and conditions apply to the SplitShare app (hereby referred to as "Application") for mobile devices that was created by GenrecAI Labs (hereby referred to as "Service Provider") as a Free service.</p>

@@ -74,10 +74,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       if (Capacitor.isNativePlatform()) {
         // Native Android: use Capacitor Firebase Authentication plugin
+        // skipNativeAuth: true means the plugin only does Google Sign-In
+        // and returns the credential for us to use with the web Firebase SDK
         const result = await FirebaseAuthentication.signInWithGoogle();
-        if (result.credential?.idToken) {
-          const credential = GoogleAuthProvider.credential(result.credential.idToken);
+        const idToken = result.credential?.idToken;
+        const accessToken = result.credential?.accessToken;
+        if (idToken || accessToken) {
+          const credential = GoogleAuthProvider.credential(idToken || null, accessToken || undefined);
           await signInWithCredential(auth, credential);
+        } else {
+          throw new Error('Google Sign-In did not return a valid credential. Please try again.');
         }
       } else {
         // Web: use popup flow
@@ -92,6 +98,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      if (Capacitor.isNativePlatform()) {
+        await FirebaseAuthentication.signOut();
+      }
       await auth.signOut();
     } catch (error) {
       console.error('Error logging out:', error);

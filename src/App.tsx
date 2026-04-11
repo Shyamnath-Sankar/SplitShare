@@ -28,8 +28,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
+      // Add class immediately so CSS padding applies on first render
+      document.body.classList.add('native-platform');
+      
       StatusBar.setBackgroundColor({ color: '#044d4b' }).catch(console.error);
       StatusBar.setStyle({ style: Style.Dark }).catch(console.error);
+      StatusBar.setOverlaysWebView({ overlay: false }).catch(console.error);
     }
   }, []);
 
