@@ -24,19 +24,19 @@ export default function Login() {
   return (
     <div className="flex min-h-screen flex-col lg:flex-row bg-white relative">
       {/* ─── Status Bar Overlay ─── */}
-      <div className="lg:hidden fixed top-0 w-full h-[var(--mobile-top-padding)] bg-[#044d4b] z-[60]" />
+      <div className="lg:hidden fixed top-0 w-full h-[var(--mobile-top-padding)] gradient-brand z-[60]" />
 
       {/* Left/Top Branding Pane */}
-      <div className="relative flex-1 lg:w-1/2 bg-[#044d4b] flex flex-col justify-end overflow-hidden pt-[var(--mobile-top-padding)] pb-12 lg:pb-0">
-        <div className="absolute inset-0 bg-[#044d4b]/40 mix-blend-multiply z-10" />
+      <div className="relative flex-1 lg:w-1/2 gradient-brand flex flex-col justify-end overflow-hidden pt-[var(--mobile-top-padding)] pb-12 lg:pb-0">
+        <div className="absolute inset-0 bg-[#056663]/40 mix-blend-multiply z-10" />
         {/* Use a CSS gradient instead of an external image that may fail to load */}
         <div
           className="absolute inset-0 opacity-50 mix-blend-overlay"
           style={{
-            background: 'linear-gradient(135deg, #065a58 0%, #033f3d 30%, #022b29 60%, #044d4b 100%)',
+            background: 'linear-gradient(135deg, #098e8a 0%, #056663 30%, #033c3a 60%, var(--color-brand) 100%)',
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#044d4b] via-[#044d4b]/60 to-transparent z-20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-brand)] via-[var(--color-brand)]/60 to-transparent z-20" />
 
         <div className="relative z-30 p-8 lg:p-16 text-white pb-16 lg:pb-16 w-full">
           <motion.div
@@ -87,11 +87,11 @@ export default function Login() {
           <button
             onClick={handleLogin}
             disabled={isSigningIn}
-            className="group relative flex w-full items-center justify-center gap-3 rounded-[1.25rem] bg-[#044d4b] px-4 py-4 text-white transition-all hover:bg-[#033f3d] hover:shadow-lg hover:shadow-[#044d4b]/20 active:scale-[0.98] font-bold text-[13px] tracking-wide uppercase disabled:opacity-70 disabled:cursor-not-allowed"
+            className="group relative flex w-full items-center justify-center gap-3 rounded-2xl gradient-brand px-4 py-4 text-white transition-all shadow-[var(--shadow-glow-brand)] hover:shadow-lg active-bounce font-bold text-[13px] tracking-wide uppercase disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <div className="absolute left-4 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm">
               {isSigningIn ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#044d4b] border-t-transparent" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--color-brand)] border-t-transparent" />
               ) : (
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="h-5 w-5" />
               )}

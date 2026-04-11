@@ -16,6 +16,7 @@ const languages = [
 export default function Settings() {
   const { userProfile, updateUserProfile, logout } = useAuth();
   const [displayName, setDisplayName] = useState(userProfile?.displayName || '');
+  const [upiId, setUpiId] = useState(userProfile?.upiId || '');
   const [currency, setCurrency] = useState(userProfile?.currency || 'USD');
   const [language, setLanguage] = useState(userProfile?.language || 'en');
   const [isSaving, setIsSaving] = useState(false);
@@ -29,6 +30,7 @@ export default function Settings() {
     try {
       await updateUserProfile({
         displayName,
+        upiId,
         currency,
         language,
       });
@@ -59,8 +61,8 @@ export default function Settings() {
       </div>
 
       {/* Profile Card */}
-      <div className="rounded-2xl sm:rounded-3xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/50 p-5 sm:p-8 shadow-sm">
-        <div className="flex items-center gap-5 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-slate-100">
+      <div className="glass-strong rounded-2xl sm:rounded-3xl p-5 sm:p-8">
+        <div className="flex items-center gap-5 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-slate-200/60">
           {userProfile?.photoURL ? (
             <img src={userProfile.photoURL} alt="" className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-cover ring-4 ring-emerald-500/10 ring-offset-2 ring-offset-white shadow-lg" referrerPolicy="no-referrer" />
           ) : (
@@ -92,7 +94,7 @@ export default function Settings() {
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 sm:p-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-white placeholder:text-slate-400"
+                  className="w-full rounded-xl border border-slate-200 p-2.5 sm:p-3 text-sm focus:border-[var(--color-brand)] focus:ring-2 focus:ring-[var(--color-brand)]/20 outline-none transition-all bg-white placeholder:text-slate-400"
                   placeholder="Your name"
                   required
                 />
@@ -105,9 +107,21 @@ export default function Settings() {
                   type="email"
                   value={userProfile?.email || ''}
                   disabled
-                  className="w-full rounded-xl border border-slate-100 bg-slate-50 p-2.5 sm:p-3 text-sm text-slate-400 cursor-not-allowed"
+                  className="w-full rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 sm:p-3 text-sm text-slate-400 cursor-not-allowed"
                 />
                 <p className="mt-1 text-[10px] sm:text-xs text-slate-400">Email cannot be changed.</p>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs sm:text-sm font-medium text-slate-600 mb-1.5 sm:mb-2">
+                  UPI ID (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 sm:p-3 text-sm focus:border-[var(--color-brand)] focus:ring-2 focus:ring-[var(--color-brand)]/20 outline-none transition-all bg-white placeholder:text-slate-400"
+                  placeholder="e.g. yourname@ybl"
+                />
               </div>
             </div>
           </section>
@@ -131,7 +145,7 @@ export default function Settings() {
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 sm:p-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-white"
+                  className="w-full rounded-xl border border-slate-200 p-2.5 sm:p-3 text-sm focus:border-[var(--color-brand)] focus:ring-2 focus:ring-[var(--color-brand)]/20 outline-none transition-all bg-white"
                 >
                   {currencies.map(c => (
                     <option key={c.code} value={c.code}>
@@ -148,7 +162,7 @@ export default function Settings() {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 sm:p-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-white"
+                  className="w-full rounded-xl border border-slate-200 p-2.5 sm:p-3 text-sm focus:border-[var(--color-brand)] focus:ring-2 focus:ring-[var(--color-brand)]/20 outline-none transition-all bg-white"
                 >
                   {languages.map(l => (
                     <option key={l.code} value={l.code}>
@@ -176,7 +190,7 @@ export default function Settings() {
             <button
               type="submit"
               disabled={isSaving}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.97] disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl gradient-brand px-6 py-3 text-sm font-semibold text-white transition-all shadow-[var(--shadow-glow-brand)] hover:shadow-lg active-bounce disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

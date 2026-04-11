@@ -9,7 +9,7 @@ import {
 import { format } from 'date-fns';
 import { PieChart as PieChartIcon, BarChart3, TrendingUp, Users, Wallet } from 'lucide-react';
 
-const COLORS = ['#044d4b', '#1c5e5c', '#34706d', '#4c817e', '#64938f', '#7ca5a0', '#94b6b1', '#acc8c2'];
+const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#ef4444', '#14b8a6', '#84cc16'];
 
 export default function Analytics() {
   const { expenses, users } = useData();
@@ -115,13 +115,8 @@ export default function Analytics() {
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="space-y-6 sm:space-y-8 max-w-lg mx-auto pb-[calc(4rem+env(safe-area-inset-bottom))]"
+      className="space-y-6 sm:space-y-8 w-full"
     >
-      <div className="flex items-end justify-between px-1">
-        <h1 className="text-3xl font-bold tracking-tight text-[#044d4b]">Analytics</h1>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[#798a83] mb-1">Insights</span>
-      </div>
-
       {/* Stat Cards */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <motion.div variants={itemVariants} className="rounded-3xl bg-[#044d4b] p-5 sm:p-6 flex items-center gap-4 relative overflow-hidden">

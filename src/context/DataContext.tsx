@@ -2,19 +2,18 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
-import { Expense, Friendship, Group, User } from '../types';
+import { Expense, Group, User } from '../types';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 
 interface DataContextType {
   expenses: Expense[];
-  friendships: Friendship[];
   groups: Group[];
   users: Record<string, User>;
   addExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => Promise<void>;
-  addFriend: (email: string) => Promise<void>;
-  acceptFriend: (friendshipId: string) => Promise<void>;
-  rejectFriend: (friendshipId: string) => Promise<void>;
+  editExpense: (id: string, expense: Partial<Omit<Expense, 'id' | 'createdAt'>>) => Promise<void>;
+  deleteExpense: (id: string) => Promise<void>;
   createGroup: (name: string, memberIds: string[]) => Promise<void>;
+  getUserByEmail: (email: string) => Promise<User | null>;
   acceptGroupInvite: (groupId: string) => Promise<void>;
   rejectGroupInvite: (groupId: string) => Promise<void>;
   removeGroupMember: (groupId: string, memberId: string) => Promise<void>;
@@ -27,14 +26,12 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [friendships, setFriendships] = useState<Friendship[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [users, setUsers] = useState<Record<string, User>>({});
 
   useEffect(() => {
     if (!currentUser) {
       setExpenses([]);
-      setFriendships([]);
       setGroups([]);
       setUsers({});
       return;
@@ -49,12 +46,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       exps.sort((a, b) => b.date?.toMillis() - a.date?.toMillis());
       setExpenses(exps);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'expenses'));
-
-    // Listen to friendships
-    const qFriendships = query(collection(db, 'friendships'), where('users', 'array-contains', uid));
-    const unsubFriendships = onSnapshot(qFriendships, (snapshot) => {
-      setFriendships(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Friendship)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'friendships'));
 
     // Listen to groups (where user is a member or pending member)
     const qGroups = query(collection(db, 'groups'), where('members', 'array-contains', uid));
@@ -81,7 +72,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       unsubExpenses();
-      unsubFriendships();
       unsubGroups();
       unsubPendingGroups();
     };
@@ -95,7 +85,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const userIds = new Set<string>();
       userIds.add(currentUser.uid);
       
-      friendships.forEach(f => f.users.forEach(u => userIds.add(u)));
       groups.forEach(g => {
         g.members.forEach(u => userIds.add(u));
         g.pendingMembers?.forEach(u => userIds.add(u));
@@ -128,7 +117,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchUsers();
-  }, [friendships, groups, expenses, currentUser]);
+  }, [groups, expenses, currentUser]);
 
   const addExpense = async (expense: Omit<Expense, 'id' | 'createdAt'>) => {
     try {
@@ -142,57 +131,33 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addFriend = async (email: string) => {
-    if (!currentUser) return;
+  const editExpense = async (id: string, expense: Partial<Omit<Expense, 'id' | 'createdAt'>>) => {
+    try {
+      await updateDoc(doc(db, 'expenses', id), expense);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `expenses/${id}`);
+      throw error;
+    }
+  };
+
+  const deleteExpense = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'expenses', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `expenses/${id}`);
+      throw error;
+    }
+  };
+
+  const getUserByEmail = async (email: string): Promise<User | null> => {
     try {
       const q = query(collection(db, 'users'), where('email', '==', email));
       const snap = await getDocs(q);
-      if (snap.empty) {
-        throw new Error('User not found with that email.');
-      }
-      const friendId = snap.docs[0].data().uid;
-      
-      if (friendId === currentUser.uid) {
-        throw new Error('You cannot add yourself as a friend.');
-      }
-
-      // Check if friendship already exists
-      const existing = friendships.find(f => f.users.includes(friendId));
-      if (existing) {
-        throw new Error('Friendship already exists.');
-      }
-
-      await addDoc(collection(db, 'friendships'), {
-        users: [currentUser.uid, friendId],
-        status: 'pending', // Require acceptance
-        createdAt: serverTimestamp(),
-      });
-    } catch (error: any) {
-      if (['User not found with that email.', 'You cannot add yourself as a friend.', 'Friendship already exists.'].includes(error?.message)) {
-        throw error;
-      }
-      handleFirestoreError(error, OperationType.CREATE, 'friendships');
-      throw error;
-    }
-  };
-
-  const acceptFriend = async (friendshipId: string) => {
-    try {
-      await updateDoc(doc(db, 'friendships', friendshipId), {
-        status: 'accepted'
-      });
+      if (snap.empty) return null;
+      return snap.docs[0].data() as User;
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `friendships/${friendshipId}`);
-      throw error;
-    }
-  };
-
-  const rejectFriend = async (friendshipId: string) => {
-    try {
-      await deleteDoc(doc(db, 'friendships', friendshipId));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `friendships/${friendshipId}`);
-      throw error;
+      console.error(error);
+      return null;
     }
   };
 
@@ -297,8 +262,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <DataContext.Provider value={{ 
-      expenses, friendships, groups, users, 
-      addExpense, addFriend, acceptFriend, rejectFriend, 
+      expenses, groups, users, 
+      addExpense, editExpense, deleteExpense, getUserByEmail,
       createGroup, acceptGroupInvite, rejectGroupInvite,
       removeGroupMember, inviteToGroup, deleteGroup
     }}>

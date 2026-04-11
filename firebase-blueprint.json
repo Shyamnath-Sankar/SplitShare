@@ -11,20 +11,10 @@
         "photoURL": { "type": "string", "description": "The URL of the user's profile picture." },
         "createdAt": { "type": "string", "format": "date-time", "description": "When the user was created." },
         "currency": { "type": "string", "description": "The user's preferred currency code." },
-        "language": { "type": "string", "description": "The user's preferred language code." }
+        "language": { "type": "string", "description": "The user's preferred language code." },
+        "upiId": { "type": "string", "description": "The user's UPI ID." }
       },
       "required": ["uid", "email", "displayName", "createdAt"]
-    },
-    "Friendship": {
-      "title": "Friendship",
-      "description": "A friendship connection between two users.",
-      "type": "object",
-      "properties": {
-        "users": { "type": "array", "items": { "type": "string" }, "description": "The UIDs of the two users." },
-        "status": { "type": "string", "enum": ["pending", "accepted"], "description": "The status of the friendship." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "When the friendship was created." }
-      },
-      "required": ["users", "status", "createdAt"]
     },
     "Group": {
       "title": "Group",
@@ -76,10 +66,6 @@
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/User" },
       "description": "Stores user profiles."
-    },
-    "/friendships/{friendshipId}": {
-      "schema": { "$ref": "#/entities/Friendship" },
-      "description": "Stores friendship connections."
     },
     "/groups/{groupId}": {
       "schema": { "$ref": "#/entities/Group" },

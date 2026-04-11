@@ -6,23 +6,28 @@ import { X, Receipt, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getCurrencySymbol } from '../utils/currency';
 
-export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
-  const { addExpense, users, groups } = useData();
+import { Expense } from '../types';
+
+export default function AddExpenseModal({ onClose, initialExpense, isReadOnly }: { onClose: () => void, initialExpense?: Expense, isReadOnly?: boolean }) {
+  const { addExpense, editExpense, deleteExpense, users, groups } = useData();
   const { currentUser, userProfile } = useAuth();
   
   if (!currentUser) return null;
 
   const activeGroups = groups.filter(g => g.members.includes(currentUser.uid));
 
-  const [selectedGroup, setSelectedGroup] = useState<string>(activeGroups[0]?.id || '');
-  const [category, setCategory] = useState<string>('General');
-  const [amount, setAmount] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState<string>(initialExpense?.groupId || activeGroups[0]?.id || '');
+  const [category, setCategory] = useState<string>(initialExpense?.category || 'General');
+  const [amount, setAmount] = useState(initialExpense?.amount?.toString() || '');
   const [splitType, setSplitType] = useState<'equal' | 'exact' | 'percentage' | 'shares'>('equal');
-  const [payerId, setPayerId] = useState<string>(currentUser.uid);
-  const [description, setDescription] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('Cash');
-  const [notes, setNotes] = useState('');
+  const [payerId, setPayerId] = useState<string>(initialExpense?.payerId || currentUser.uid);
+  const [description, setDescription] = useState(initialExpense?.description || '');
+  const [paymentMethod, setPaymentMethod] = useState<string>(initialExpense?.paymentMethod || 'Cash');
+  const [notes, setNotes] = useState(initialExpense?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
+    initialExpense?.participants || (groups.find(g => g.id === (initialExpense?.groupId || activeGroups[0]?.id))?.members || [])
+  );
   
   const [exactAmounts, setExactAmounts] = useState<Record<string, string>>({});
   const [percentages, setPercentages] = useState<Record<string, string>>({});
@@ -44,7 +49,13 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
 
     const group = groups.find(g => g.id === selectedGroup);
     if (!group) return;
-    const participants = group.members;
+    
+    // Safety check - need at least one participant
+    if (selectedParticipants.length === 0) {
+      alert("Please select at least one participant.");
+      return;
+    }
+    const participants = selectedParticipants;
 
     const splits: Record<string, { paid: number; owed: number }> = {};
     
@@ -104,20 +115,28 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
 
     setIsSubmitting(true);
     try {
-      await addExpense({
+      const expenseData = {
         description: description || 'Group Expense',
         amount: totalAmount,
-        date: new Date(),
-        creatorId: currentUser.uid,
         payerId: payerId || currentUser.uid,
         groupId: selectedGroup,
         participants,
         splits,
-        type: 'expense',
         category,
         paymentMethod,
         notes
-      });
+      };
+
+      if (initialExpense) {
+        await editExpense(initialExpense.id, expenseData);
+      } else {
+        await addExpense({
+          ...expenseData,
+          date: new Date(),
+          creatorId: currentUser.uid,
+          type: 'expense'
+        });
+      }
 
       onClose();
     } catch (error) {
@@ -127,7 +146,8 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const selectedGroupMembers = groups.find(g => g.id === selectedGroup)?.members || [];
+  const currentGroupMembers = groups.find(g => g.id === selectedGroup)?.members || [];
+  const selectedGroupMembers = selectedParticipants;
 
   const totalAmountForDisplay = parseFloat(amount) || 0;
   const currentSplits: Record<string, number> = {};
@@ -164,7 +184,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" 
           onClick={onClose} 
         />
         <motion.div 
@@ -172,7 +192,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[85vh] mt-auto sm:mt-0"
+          className="relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl glass-strong shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[85vh] mt-auto sm:mt-0"
         >
           <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-slate-200 sm:hidden shrink-0" />
           
@@ -182,7 +202,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
               <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600">
                 <Receipt className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Add an expense</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">{isReadOnly ? 'Payment Details' : (initialExpense ? 'Edit Expense' : 'Add an expense')}</h2>
             </div>
             <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-90" disabled={isSubmitting}>
               <X className="h-5 w-5" />
@@ -208,10 +228,13 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
                 <select
                   value={selectedGroup}
                   onChange={(e) => {
-                    setSelectedGroup(e.target.value);
+                    const groupId = e.target.value;
+                    setSelectedGroup(groupId);
                     setPayerId(currentUser.uid);
+                    const group = groups.find(g => g.id === groupId);
+                    if (group) setSelectedParticipants(group.members);
                   }}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isReadOnly}
                   className="w-full rounded-xl border border-slate-200 px-4 py-2.5 sm:py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-white disabled:opacity-50"
                   required
                 >
@@ -227,7 +250,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isReadOnly}
                   className="w-full rounded-xl border border-slate-200 px-4 py-2.5 sm:py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-white disabled:opacity-50"
                 >
                   <option value="General">General</option>
@@ -253,9 +276,42 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
                     placeholder="0.00"
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isReadOnly}
                     className="w-full rounded-xl border border-slate-200 pl-9 pr-4 py-3 text-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all font-bold text-slate-900 bg-slate-50/50 disabled:opacity-50"
                   />
+                </div>
+              </div>
+
+              {/* Who's involved? */}
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-slate-600 mb-2">Who's involved?</label>
+                <div className="flex flex-wrap gap-2">
+                  {currentGroupMembers.map(m => {
+                    const isSelected = selectedParticipants.includes(m);
+                    return (
+                      <label 
+                        key={m} 
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs sm:text-sm font-medium cursor-pointer transition-all ${
+                          isSelected ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
+                        } ${isReadOnly || isSubmitting ? 'opacity-70 pointer-events-none' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          disabled={isSubmitting || isReadOnly}
+                          onChange={() => {
+                            if (isSelected) {
+                              setSelectedParticipants(prev => prev.filter(p => p !== m));
+                            } else {
+                              setSelectedParticipants(prev => [...prev, m]);
+                            }
+                          }}
+                          className="w-3 h-3 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                        />
+                        {m === currentUser.uid ? 'You' : users[m]?.displayName?.split(' ')[0] || m}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -268,7 +324,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
                       key={opt.key}
                       type="button"
                       onClick={() => setSplitType(opt.key)}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isReadOnly}
                       className={`flex-1 rounded-lg py-2 text-xs sm:text-sm font-medium transition-all ${
                         splitType === opt.key
                           ? 'bg-white text-slate-900 shadow-sm'
@@ -282,7 +338,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
               </div>
 
               {/* Split details */}
-              <div className="space-y-2.5 bg-slate-50/80 p-4 rounded-xl border border-slate-100">
+              <div className="space-y-2.5 bg-slate-50/50 p-4 rounded-xl border border-slate-200/60">
                 <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   {splitType === 'equal' ? 'Split equally' : splitType === 'exact' ? 'Enter exact amounts' : splitType === 'percentage' ? 'Enter percentages' : 'Enter shares (default 1)'}
                 </p>
@@ -311,7 +367,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
                             step={splitType === 'shares' ? '0.5' : splitType === 'percentage' ? '1' : '0.01'}
                             max={splitType === 'percentage' ? '100' : undefined}
                             value={splitType === 'exact' ? (exactAmounts[p] || '') : splitType === 'percentage' ? (percentages[p] || '') : (shares[p] ?? '1')}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isReadOnly}
                             onChange={(e) => {
                               if (splitType === 'exact') setExactAmounts(prev => ({ ...prev, [p]: e.target.value }));
                               else if (splitType === 'percentage') setPercentages(prev => ({ ...prev, [p]: e.target.value }));
@@ -336,10 +392,10 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
                 <select
                   value={payerId}
                   onChange={(e) => setPayerId(e.target.value)}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isReadOnly}
                   className="w-full rounded-xl border border-slate-200 px-4 py-2.5 sm:py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-white disabled:opacity-50"
                 >
-                  {selectedGroupMembers.map(m => (
+                  {currentGroupMembers.map(m => (
                     <option key={m} value={m}>{m === currentUser.uid ? 'You' : users[m]?.displayName || m}</option>
                   ))}
                 </select>
@@ -353,7 +409,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
                   placeholder="e.g. Dinner at Mario's"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isReadOnly}
                   className="w-full rounded-xl border border-slate-200 px-4 py-2.5 sm:py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-white placeholder:text-slate-400 disabled:opacity-50"
                 />
               </div>
@@ -365,7 +421,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isReadOnly}
                     className="w-full rounded-xl border border-slate-200 px-4 py-2.5 sm:py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-white disabled:opacity-50"
                   >
                     <option value="Cash">Cash</option>
@@ -381,7 +437,7 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Add details..."
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isReadOnly}
                     className="w-full rounded-xl border border-slate-200 px-4 py-2.5 sm:py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all bg-white placeholder:text-slate-400 disabled:opacity-50"
                   />
                 </div>
@@ -396,28 +452,49 @@ export default function AddExpenseModal({ onClose }: { onClose: () => void }) {
 
               {/* Actions */}
               <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100 shrink-0">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto rounded-xl px-5 py-3 sm:py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors order-2 sm:order-1 disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-3 sm:py-2.5 text-sm font-semibold text-white hover:shadow-lg hover:shadow-emerald-500/20 transition-all active:scale-[0.97] order-1 sm:order-2 disabled:opacity-70"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    'Save Expense'
-                  )}
-                </button>
+                {isReadOnly ? (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-full sm:w-auto rounded-xl px-8 py-3 sm:py-2.5 text-sm font-semibold transition-colors bg-slate-100 text-slate-700 hover:bg-slate-200 order-1"
+                  >
+                    Close
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (initialExpense && window.confirm("Are you sure you want to delete this expense?")) {
+                          setIsSubmitting(true);
+                          await deleteExpense(initialExpense.id);
+                          setIsSubmitting(false);
+                          onClose();
+                        } else if (!initialExpense) {
+                          onClose();
+                        }
+                      }}
+                      disabled={isSubmitting}
+                      className={`w-full sm:w-auto rounded-xl px-5 py-3 sm:py-2.5 text-sm font-semibold transition-colors order-2 sm:order-1 disabled:opacity-50 ${initialExpense ? 'text-rose-600 hover:bg-rose-50' : 'text-slate-600 hover:bg-slate-100'}`}
+                    >
+                      {initialExpense ? 'Delete' : 'Cancel'}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || selectedParticipants.length === 0}
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl gradient-brand px-6 py-3 sm:py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-glow-brand)] hover:shadow-lg transition-all active-bounce order-1 sm:order-2 disabled:opacity-70"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        initialExpense ? 'Save Changes' : 'Save Expense'
+                      )}
+                    </button>
+                  </>
+                )}
               </div>
             </form>
           )}

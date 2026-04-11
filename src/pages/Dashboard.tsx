@@ -11,6 +11,7 @@ export default function Dashboard() {
   const { expenses, users, groups } = useData();
   const { currentUser, userProfile } = useAuth();
   const [isSettleModalOpen, setIsSettleModalOpen] = useState(false);
+  const [settlePrefill, setSettlePrefill] = useState<{userId: string, amount: number} | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
 
   if (!currentUser) return null;
@@ -87,7 +88,10 @@ export default function Dashboard() {
       className="space-y-6 sm:space-y-8 max-w-lg mx-auto pb-[calc(4rem+env(safe-area-inset-bottom))]"
     >
       {/* Total Balance Card */}
-      <motion.div variants={itemVariants} className="rounded-3xl bg-gradient-to-br from-white to-[#f4f9f7] p-6 sm:p-8 shadow-sm border border-slate-100 relative overflow-hidden">
+      <motion.div variants={itemVariants} className="glass-strong rounded-3xl p-6 sm:p-8 relative overflow-hidden card-hover group">
+        <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-30 transition-opacity">
+          <Wallet className="h-24 w-24 text-[--color-brand]" />
+        </div>
         <h2 className="text-xs font-bold uppercase tracking-widest text-[#5a716f] mb-1">Total Net Balance</h2>
         <p className={clsx(
           "text-4xl sm:text-5xl font-bold tracking-tight mb-2",
@@ -100,8 +104,11 @@ export default function Dashboard() {
           <span>Track your overall net balance</span>
         </div>
         <button
-          onClick={() => setIsSettleModalOpen(true)}
-          className="flex items-center justify-center gap-2 rounded-xl bg-[#044d4b] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#033f3d] active:scale-[0.98] w-40"
+          onClick={() => {
+            setSettlePrefill(null);
+            setIsSettleModalOpen(true);
+          }}
+          className="flex items-center justify-center gap-2 rounded-xl gradient-brand px-6 py-3 text-sm font-semibold text-white transition-all shadow-[var(--shadow-glow-brand)] hover:shadow-lg active-bounce w-40"
         >
           <Wallet className="h-4 w-4" />
           Settle Up
@@ -111,9 +118,9 @@ export default function Dashboard() {
       {/* Owed / Owe Cards */}
       <div className="grid gap-4">
         {/* You Are Owed */}
-        <motion.div variants={itemVariants} className="rounded-2xl bg-[#cfe6d6] p-5 shadow-sm relative overflow-hidden flex flex-col">
+        <motion.div variants={itemVariants} className="glass rounded-2xl p-5 relative overflow-hidden flex flex-col card-hover">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#b8cfbf]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100/80">
               <ArrowDownLeft className="h-4 w-4 text-[#43644f]" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#668673]">Receivable</span>
@@ -125,15 +132,15 @@ export default function Dashboard() {
         </motion.div>
 
         {/* You Owe */}
-        <motion.div variants={itemVariants} className="rounded-2xl bg-[#e5ebe8] p-5 shadow-sm flex flex-col">
+        <motion.div variants={itemVariants} className="glass rounded-2xl p-5 flex flex-col card-hover">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#d0d6d3]">
-              <ArrowUpRight className="h-4 w-4 text-[#596660]" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-100/80">
+              <ArrowUpRight className="h-4 w-4 text-rose-600" />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#798a83]">Payable</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-rose-600">Payable</span>
           </div>
-          <h2 className="text-sm font-medium text-[#5a6b63] mb-1">You owe</h2>
-          <p className="text-3xl font-bold text-[#303f38] tracking-tight">
+          <h2 className="text-sm font-medium text-rose-700/80 mb-1">You owe</h2>
+          <p className="text-3xl font-bold text-rose-700 tracking-tight">
             {currencySymbol}{totalIOwe.toFixed(2)}
           </p>
         </motion.div>
@@ -152,12 +159,12 @@ export default function Dashboard() {
           ) : (
             <>
               {youAreOwedList.slice(0, 3).map(([userId, bal]) => (
-                <div key={userId} className="flex items-center justify-between p-4 rounded-2xl bg-[#f2f6f5]">
+                <div key={userId} className="flex items-center justify-between p-4 rounded-2xl glass card-hover">
                   <div className="flex items-center gap-3">
                     {users[userId]?.photoURL ? (
-                      <img src={users[userId].photoURL} alt="" className="h-10 w-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={users[userId].photoURL} alt="" className="h-10 w-10 rounded-full object-cover ring-2 ring-emerald-500/20" referrerPolicy="no-referrer" />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#cfe6d6] text-[#486b55] font-bold">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold ring-2 ring-emerald-500/20">
                         {users[userId]?.displayName?.[0]?.toUpperCase() || '?'}
                       </div>
                     )}
@@ -173,12 +180,12 @@ export default function Dashboard() {
                 </div>
               ))}
               {youOweList.slice(0, 3).map(([userId, bal]) => (
-                <div key={userId} className="flex items-center justify-between p-4 rounded-2xl bg-[#f2f6f5]">
+                <div key={userId} className="flex items-center justify-between p-4 rounded-2xl glass card-hover">
                   <div className="flex items-center gap-3">
                     {users[userId]?.photoURL ? (
-                      <img src={users[userId].photoURL} alt="" className="h-10 w-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={users[userId].photoURL} alt="" className="h-10 w-10 rounded-full object-cover ring-2 ring-rose-500/20" referrerPolicy="no-referrer" />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4d7d7] text-[#8c4040] font-bold">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-700 font-bold ring-2 ring-rose-500/20">
                         {users[userId]?.displayName?.[0]?.toUpperCase() || '?'}
                       </div>
                     )}
@@ -189,7 +196,16 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-bold uppercase tracking-widest text-[#b53f3f] mb-0.5">You Owe</p>
-                    <p className="text-lg font-bold text-[#b53f3f]">{currencySymbol}{Math.abs(bal).toFixed(2)}</p>
+                    <p className="text-lg font-bold text-[#b53f3f] mb-2">{currencySymbol}{Math.abs(bal).toFixed(2)}</p>
+                    <button
+                      onClick={() => {
+                        setSettlePrefill({ userId, amount: Math.abs(bal) });
+                        setIsSettleModalOpen(true);
+                      }}
+                      className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-rose-500 to-rose-600 text-white text-xs font-bold active-bounce shadow-md shadow-rose-500/20"
+                    >
+                      Pay
+                    </button>
                   </div>
                 </div>
               ))}
@@ -198,22 +214,16 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Abstract shapes for decoration */}
-      <motion.div variants={itemVariants} className="rounded-3xl bg-[#20494a] p-6 text-white shadow-lg overflow-hidden relative mt-4">
-        <h3 className="text-lg font-bold mb-2">Keep it up!</h3>
-        <p className="text-sm text-[#93b3b2] mb-6 max-w-[85%] leading-relaxed">
-          Great job keeping your shared expenses organized. Settle up regularly to keep the books clean.
-        </p>
-        
-        <div className="absolute bottom-0 right-4 flex items-end gap-1 opacity-20 pointer-events-none">
-          <div className="w-4 h-12 bg-white rounded-t-sm" />
-          <div className="w-4 h-8 bg-white rounded-t-sm" />
-          <div className="w-4 h-16 bg-white rounded-t-sm" />
-        </div>
-      </motion.div>
 
       {isSettleModalOpen && (
-        <SettleUpModal onClose={() => setIsSettleModalOpen(false)} />
+        <SettleUpModal 
+          onClose={() => {
+            setIsSettleModalOpen(false);
+            setSettlePrefill(null);
+          }} 
+          prefillUserId={settlePrefill?.userId}
+          prefillAmount={settlePrefill?.amount}
+        />
       )}
     </motion.div>
   );

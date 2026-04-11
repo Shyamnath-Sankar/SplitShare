@@ -14,16 +14,14 @@ export default function Layout() {
   const navLinks = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/recent', icon: Clock, label: 'Activity' },
-    { to: '/friends', icon: Users, label: 'Friends' },
     { to: '/groups', icon: Folder, label: 'Groups' },
-    { to: '/analytics', icon: BarChart2, label: 'Analytics' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   const mobileNavLinks = navLinks.filter(link => link.to !== '/settings');
 
   return (
-    <div className="flex h-screen bg-gradient-to-b from-slate-50 to-slate-100/80 font-sans">
+    <div className="fixed inset-0 flex bg-gradient-to-b from-slate-50 to-slate-100/80 font-sans">
       {/* ─── Desktop Sidebar ─── */}
       <aside className="w-72 flex-col border-r border-slate-200/40 hidden md:flex bg-white/60 backdrop-blur-xl">
         {/* Logo */}
@@ -91,12 +89,15 @@ export default function Layout() {
       {/* ─── Main Content ─── */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 h-16 sm:h-20 flex items-center justify-between px-4 sm:px-10">
+        <header 
+          className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-slate-200/40 flex items-center justify-between px-4 sm:px-10 pb-3"
+          style={{ paddingTop: 'max(env(safe-area-inset-top), 1rem)', minHeight: 'calc(4rem + env(safe-area-inset-top, 0px))' }}
+        >
           <div className="md:hidden flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#044d4b] shadow-sm border border-[#044d4b] overflow-hidden p-[2px]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-brand)] shadow-sm border border-[var(--color-brand)] overflow-hidden p-[2px]">
               <img src="/screen1.png" alt="Logo" className="h-full w-full object-contain" />
             </div>
-            <h1 className="text-xl font-bold text-[#044d4b]">SplitShare</h1>
+            <h1 className="text-xl font-bold text-[var(--color-brand)]">SplitShare</h1>
           </div>
           <div className="hidden md:block flex-1" />
           <div className="flex items-center gap-2 sm:gap-3">

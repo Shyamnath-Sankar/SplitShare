@@ -6,13 +6,7 @@ export interface User {
   createdAt: any;
   currency?: string;
   language?: string;
-}
-
-export interface Friendship {
-  id: string;
-  users: string[];
-  status: 'pending' | 'accepted';
-  createdAt: any;
+  upiId?: string;
 }
 
 export interface Group {
